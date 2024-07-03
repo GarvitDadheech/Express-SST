@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 
 app.use(express.json());
-
+app.use(loggerMiddleware);
 let courses = [
     { id: 1, name: 'course1' },
     { id: 2, name: 'course2' },
@@ -47,5 +47,15 @@ app.delete('/courses/:id', (req, res) => {
 
     res.json(course);
 });
+
+function loggerMiddleware(req,res,next){
+    console.log("Logging...");
+    console.log("Method: "+req.method);
+    console.log("IP: "+req.ip);
+    console.log("HostName: "+req.hostname);
+    console.log( "Date: "+new Date().toISOString().split('T')[0]);
+    next();
+}
+
 
 app.listen(3000, () => console.log('Listening on port 3000...'));
