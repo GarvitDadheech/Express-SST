@@ -3,11 +3,12 @@ const app = express();
 
 app.use(express.json());
 app.use(loggerMiddleware);
-let courses = [
-    { id: 1, name: 'course1' },
-    { id: 2, name: 'course2' },
-    { id: 3, name: 'course3' }
-]
+const errorMiddleware = require('./errorMiddleware');
+
+const coursesFilePath = './courses.json';
+const fs = require('fs');
+let courses = JSON.parse(fs.readFileSync(coursesFilePath, 'utf8'));
+
 
 app.get('/courses', (req, res) => {
     res.json(courses);
@@ -16,6 +17,7 @@ app.get('/courses', (req, res) => {
 app.get('/courses/:id', (req, res) => {
     const course = courses.find(c => c.id === parseInt(req.params.id));
     if (!course) res.status(404).send('The course with the given ID was not found');
+
     res.json(course);
 });
 
@@ -27,6 +29,7 @@ app.post('/courses', (req, res) => {
         name: courseName
     };
     courses.push(course);
+    saveCoursesToFile();
     res.send(course);
 });
 
@@ -35,6 +38,7 @@ app.put('/courses/:id', (req, res) => {
     if (!course) res.status(404).send('The course with the given ID was not found');
 
     course.name = req.body.name;
+    saveCoursesToFile();
     res.json(course);
 });
 
@@ -44,7 +48,7 @@ app.delete('/courses/:id', (req, res) => {
 
     const index = courses.indexOf(course);
     courses.splice(index, 1);
-
+    saveCoursesToFile();
     res.json(course);
 });
 
@@ -57,5 +61,14 @@ function loggerMiddleware(req,res,next){
     next();
 }
 
+function saveCoursesToFile() {
+    console.log(courses);
+    fs.writeFile(coursesFilePath, JSON.stringify(courses, null, 2), (err) => {
+        if (err) throw err;
+        console.log('Courses saved to file');
+    });
+}
+
+app.use(errorMiddleware);
 
 app.listen(3000, () => console.log('Listening on port 3000...'));
